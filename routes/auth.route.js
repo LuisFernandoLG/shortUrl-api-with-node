@@ -1,39 +1,26 @@
-import express from 'express'
-import { body } from 'express-validator'
-import { login, register } from '../controllers/auth.controller.js'
-import { validateFields } from '../middlewares/validateFields.js'
-const router = express.Router()
+import { Router } from 'express'
+import {
+  infoUser,
+  login,
+  logout,
+  refreshToken,
+  register,
+} from '../controllers/auth.controller.js'
+import { requireRefreshToken } from '../middlewares/requireRefreshToken.js'
+import { requireToken } from '../middlewares/requireToken.js'
+import { validateResults } from '../middlewares/validateResults.js'
+import {
+  loginBodyValidation,
+  registerBodyValidation,
+} from '../middlewares/validatorManager.js'
 
-router.post(
-  '/register',
-  [
-    body('email', 'Formato de email incorrecto').isEmail().normalizeEmail(),
-    body('password', 'Formato de contraseña incorrecto')
-      .isLength({ min: 6 })
-      .custom((value, { req }) => {
-        if (value !== req.body.repassword)
-          throw new Error('No coinciden las contraseñas')
-        return value
-      }),
-  ],
-  validateFields,
-  register
-)
+const router = Router()
 
-router.get(
-  '/login',
-  [
-    body('email', 'Formato de email incorrecto').isEmail().normalizeEmail(),
-    body('password', 'Formato de contraseña incorrecto')
-      .isLength({ min: 6 })
-      .custom((value, { req }) => {
-        if (value !== req.body.repassword)
-          throw new Error('No coinciden las contraseñas')
-        return value
-      }),
-  ],
-  validateFields,
-  login
-)
+router.post('/register', registerBodyValidation, register)
+router.get('/login', loginBodyValidation, validateResults, login)
+
+router.get('/protected', requireToken, infoUser)
+router.get('/refreshToken', requireRefreshToken, refreshToken)
+router.get('/logout', logout)
 
 export default router

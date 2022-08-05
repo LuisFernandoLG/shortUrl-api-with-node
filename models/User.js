@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 const { Schema, model } = mongoose
+import bcrypt from "bcryptjs"
 
 const UserSchema = Schema({
   email: {
@@ -16,4 +17,26 @@ const UserSchema = Schema({
   },
 })
 
-export const user = model('user', UserSchema)
+UserSchema.pre("save", async function(next){
+  const user = this
+
+  // No volver a hashear la contraseña
+  if(!user.isModified('password')) return next()
+  
+  try {
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(user.password, salt)
+    user.password = hashedPassword
+    next()
+  } catch (error) {
+    console.log(error)
+    throw new Error("Falló el hash")
+  }
+  
+})
+
+UserSchema.methods.comparePassword = async function(candidatePassword){
+  return await bcrypt.compare(candidatePassword, this.password)
+}
+
+export const User = model('User', UserSchema)
