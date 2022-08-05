@@ -17,7 +17,7 @@ import {
 const router = Router()
 
 router.post('/register', registerBodyValidation, register)
-router.get('/login', loginBodyValidation, validateResults, login)
+router.post('/login', loginBodyValidation, validateResults, login)
 
 router.get('/protected', requireToken, infoUser)
 router.get('/refreshToken', requireRefreshToken, refreshToken)
